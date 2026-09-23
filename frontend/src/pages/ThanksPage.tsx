@@ -18,16 +18,23 @@ export default function ThanksPage() {
     if (!reg) { setStatus('unknown'); return }
     let polls = 0
     let timer: number | undefined
+    let cancelled = false
     const tick = async () => {
       try {
         const r = await api.registrationStatus(reg)
+        if (cancelled) return
         if (r.status !== 'pending') { setStatus(r.status); return }
-      } catch { setStatus('unknown'); return }
+      } catch {
+        if (cancelled) return
+        setStatus('unknown')
+        return
+      }
+      if (cancelled) return
       if (++polls >= MAX_POLLS) { setStatus('timeout'); return }
       timer = window.setTimeout(tick, POLL_MS)
     }
     tick()
-    return () => window.clearTimeout(timer)
+    return () => { cancelled = true; window.clearTimeout(timer) }
   }, [reg])
 
   const text = {
