@@ -1,5 +1,6 @@
 from typing import Literal
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _DEV_SECRET = "dev-secret-change-me"
@@ -24,7 +25,9 @@ class Settings(BaseSettings):
     smtp_password: str | None = None
     smtp_from: str = "matami@example.com"
     contact_email: str = "matami@example.com"
-    hold_minutes: int = 31
+    # Stripe requires a Checkout Session's expires_at to be at least 30 minutes
+    # after creation, so the hold must outlast that floor plus some margin.
+    hold_minutes: int = Field(default=31, ge=31)
     sweep_interval_seconds: int = 300
 
     def model_post_init(self, _context: object) -> None:

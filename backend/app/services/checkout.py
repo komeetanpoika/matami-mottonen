@@ -48,11 +48,14 @@ def start_checkout(
     lang: str,
     now: datetime | None = None,
 ) -> CheckoutResult:
-    now = now or datetime.now(UTC)
     with db.begin():
         ev = lock_published_by_slug(db, slug)
         if ev is None:
             raise CheckoutError("not_found")
+        # Resolve `now` only after the row lock is acquired: computing it earlier
+        # would let lock-wait time erode the hold margin over Stripe's expires_at
+        # floor, and a stale `now` could miss holds that expired while we waited.
+        now = now or datetime.now(UTC)
         left = seats_left(ev.capacity, holds_for(db, ev.id), now)
         if quantity > left:
             raise CheckoutError("sold_out", seats_left=left)

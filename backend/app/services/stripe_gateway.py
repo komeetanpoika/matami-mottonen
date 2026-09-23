@@ -20,7 +20,15 @@ class CheckoutSession:
 
 class StripeGateway:
     def __init__(self, secret_key: str, webhook_secret: str) -> None:
-        self._client = stripe.StripeClient(secret_key)
+        # create_checkout_session runs while the event row lock is held, so a
+        # hung Stripe call would hold that lock open indefinitely. An explicit
+        # timeout plus no built-in retries makes a stuck request fail fast into
+        # StripeError (and the existing 502 path) instead of stalling the lock.
+        self._client = stripe.StripeClient(
+            secret_key,
+            max_network_retries=0,
+            http_client=stripe.RequestsClient(timeout=10),
+        )
         self._webhook_secret = webhook_secret
 
     def create_checkout_session(
