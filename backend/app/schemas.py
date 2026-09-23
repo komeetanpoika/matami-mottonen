@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from datetime import datetime
+
+from pydantic import BaseModel, Field, model_validator
 
 
 class LoginIn(BaseModel):
@@ -12,3 +14,49 @@ class LoginIn(BaseModel):
 
 class MeOut(BaseModel):
     email: str
+
+
+class EventIn(BaseModel):
+    title_fi: str | None = Field(default=None, max_length=200)
+    title_en: str | None = Field(default=None, max_length=200)
+    description_fi: str | None = None
+    description_en: str | None = None
+    starts_at: datetime
+    ends_at: datetime | None = None
+    location: str | None = Field(default=None, max_length=300)
+    price_cents: int = Field(ge=0)
+    capacity: int = Field(ge=1)
+    is_published: bool = False
+
+    @model_validator(mode="after")
+    def _some_title(self) -> "EventIn":
+        if not (self.title_fi or self.title_en):
+            raise ValueError("title_fi or title_en is required")
+        if self.ends_at is not None and self.ends_at < self.starts_at:
+            raise ValueError("ends_at before starts_at")
+        return self
+
+
+class EventOut(BaseModel):
+    """Public shape."""
+
+    id: int
+    slug: str
+    title_fi: str | None
+    title_en: str | None
+    description_fi: str | None
+    description_en: str | None
+    starts_at: datetime
+    ends_at: datetime | None
+    location: str | None
+    price_cents: int
+    currency: str
+    capacity: int
+    seats_left: int
+    sold_out: bool
+
+
+class AdminEventOut(EventOut):
+    is_published: bool
+    confirmed_count: int
+    pending_count: int
