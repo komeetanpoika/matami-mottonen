@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class LoginIn(BaseModel):
@@ -60,3 +60,15 @@ class AdminEventOut(EventOut):
     is_published: bool
     confirmed_count: int
     pending_count: int
+
+
+class CheckoutIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    email: EmailStr
+    quantity: int = Field(ge=1, le=10)
+    lang: str = Field(default="en", pattern="^(fi|en|de|futhark)$")
+
+
+class CheckoutOut(BaseModel):
+    registration_id: str
+    checkout_url: str | None
