@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Event, Registration
@@ -93,3 +94,76 @@ def test_counts_and_delete_guard(client: TestClient, db: Session) -> None:
     assert row["confirmed_count"] == 2 and row["pending_count"] == 1
     assert client.delete(f"/api/admin/events/{ev.id}").status_code == 409
     assert db.get(Event, ev.id) is not None
+
+
+def test_delete_blocked_by_a_live_pending_hold(client: TestClient, db: Session) -> None:
+    login(client)
+    ev = make_event(db)
+    now = datetime.now(UTC)
+    db.add(
+        Registration(
+            event_id=ev.id,
+            name="B",
+            email="b@x.fi",
+            quantity=1,
+            status="pending",
+            amount_cents=2000,
+            expires_at=now + timedelta(minutes=30),
+        )
+    )
+    db.commit()
+    assert client.delete(f"/api/admin/events/{ev.id}").status_code == 409
+    assert db.get(Event, ev.id) is not None
+
+
+def test_delete_blocked_by_a_cancelled_registration(client: TestClient, db: Session) -> None:
+    login(client)
+    ev = make_event(db)
+    now = datetime.now(UTC)
+    db.add(
+        Registration(
+            event_id=ev.id,
+            name="C",
+            email="c@x.fi",
+            quantity=1,
+            status="cancelled",
+            amount_cents=2000,
+            expires_at=now,
+        )
+    )
+    db.commit()
+    assert client.delete(f"/api/admin/events/{ev.id}").status_code == 409
+
+
+def test_delete_clears_dead_holds(client: TestClient, db: Session) -> None:
+    login(client)
+    ev = make_event(db)
+    now = datetime.now(UTC)
+    db.add_all(
+        [
+            Registration(
+                event_id=ev.id,
+                name="D",
+                email="d@x.fi",
+                quantity=1,
+                status="expired",
+                amount_cents=2000,
+                expires_at=now - timedelta(hours=1),
+            ),
+            Registration(
+                event_id=ev.id,
+                name="E",
+                email="e@x.fi",
+                quantity=1,
+                status="pending",
+                amount_cents=2000,
+                expires_at=now - timedelta(minutes=1),
+            ),
+        ]
+    )
+    db.commit()
+    event_id = ev.id
+    assert client.delete(f"/api/admin/events/{event_id}").status_code == 204
+    db.expire_all()
+    assert db.get(Event, event_id) is None
+    assert db.scalar(select(func.count()).select_from(Registration)) == 0

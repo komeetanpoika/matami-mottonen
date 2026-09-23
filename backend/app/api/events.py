@@ -42,7 +42,8 @@ def list_events(db: Session = Depends(get_db)) -> list[EventOut]:
 
 @router.get("/{slug}", response_model=EventOut)
 def get_event(slug: str, db: Session = Depends(get_db)) -> EventOut:
-    ev = get_published_by_slug(db, slug)
+    now = datetime.now(UTC)
+    ev = get_published_by_slug(db, slug, now)
     if ev is None:
         raise HTTPException(status_code=404, detail="Event not found")
-    return public_out(ev, holds_by_event(db, [ev.id]).get(ev.id, []), datetime.now(UTC))
+    return public_out(ev, holds_by_event(db, [ev.id]).get(ev.id, []), now)

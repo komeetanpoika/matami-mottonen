@@ -43,16 +43,22 @@ def _post(client: TestClient, event: dict, secret: str = SECRET):
     )
 
 
-def _completed(reg: Registration) -> dict:
+def _completed(reg: Registration, **obj: object) -> dict:
+    obj.setdefault("payment_status", "paid")
+    return _session_event("checkout.session.completed", reg, **obj)
+
+
+def _session_event(kind: str, reg: Registration, **obj: object) -> dict:
     return {
         "id": "evt_1",
-        "type": "checkout.session.completed",
+        "type": kind,
         "data": {
             "object": {
                 "id": "cs_1",
                 "payment_intent": "pi_1",
                 "client_reference_id": str(reg.id),
                 "metadata": {"registration_id": str(reg.id)},
+                **obj,
             }
         },
     }
@@ -168,6 +174,7 @@ def test_unknown_registration_and_unknown_type_are_acknowledged(
             "object": {
                 "id": "cs_none",
                 "payment_intent": "pi_x",
+                "payment_status": "paid",
                 "client_reference_id": "nope",
                 "metadata": {},
             }
@@ -218,4 +225,47 @@ def test_concurrent_completed_confirms_once(
     assert results == [200, 200]
     db.refresh(reg)
     assert reg.status == "confirmed"
+    assert len(mailer_fake.sent) == 1
+
+
+def test_completed_without_paid_payment_status_leaves_hold_pending(
+    client: TestClient, db: Session, mailer_fake: RecordingMailer
+) -> None:
+    reg = _reg(db)
+    assert _post(client, _completed(reg, payment_status="unpaid")).status_code == 200
+    db.refresh(reg)
+    assert reg.status == "pending" and reg.confirmed_at is None
+    assert mailer_fake.sent == []
+
+
+def test_async_payment_succeeded_confirms_and_emails(
+    client: TestClient, db: Session, mailer_fake: RecordingMailer
+) -> None:
+    reg = _reg(db)
+    _post(client, _completed(reg, payment_status="unpaid"))
+    r = _post(client, _session_event("checkout.session.async_payment_succeeded", reg))
+    assert r.status_code == 200
+    db.refresh(reg)
+    assert reg.status == "confirmed" and reg.confirmed_at is not None
+    assert len(mailer_fake.sent) == 1
+
+
+def test_async_payment_failed_releases_hold(client: TestClient, db: Session) -> None:
+    reg = _reg(db)
+    assert (
+        _post(client, _session_event("checkout.session.async_payment_failed", reg)).status_code
+        == 200
+    )
+    db.refresh(reg)
+    assert reg.status == "expired"
+
+
+def test_completed_for_expired_registration_confirms_anyway(
+    client: TestClient, db: Session, mailer_fake: RecordingMailer
+) -> None:
+    # The sweep released the hold while the customer was still paying.
+    reg = _reg(db, status="expired", expires_at=datetime.now(UTC) - timedelta(minutes=1))
+    assert _post(client, _completed(reg)).status_code == 200
+    db.refresh(reg)
+    assert reg.status == "confirmed" and reg.confirmed_at is not None
     assert len(mailer_fake.sent) == 1

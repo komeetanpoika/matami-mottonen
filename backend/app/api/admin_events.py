@@ -88,11 +88,18 @@ def update_event(event_id: int, body: EventIn, db: Session = Depends(get_db)) ->
 @router.delete("/{event_id}", status_code=204)
 def delete_event(event_id: int, db: Session = Depends(get_db)) -> None:
     ev = _get(db, event_id)
-    holds = holds_by_event(db, [ev.id]).get(ev.id, [])
-    if any(h.status == "confirmed" for h in holds):
-        raise HTTPException(status_code=409, detail="Event has confirmed registrations")
-    # Non-confirmed registrations go first because of ondelete=RESTRICT.
-    for reg in db.scalars(select(Registration).where(Registration.event_id == ev.id)):
+    now = datetime.now(UTC)
+    regs = list(db.scalars(select(Registration).where(Registration.event_id == ev.id)))
+    # `confirmed` and `cancelled` rows are the refund trail and must survive;
+    # a live `pending` row is a paid-or-about-to-be-paid Stripe session whose
+    # webhook would land on a deleted event.
+    if any(
+        r.status in ("confirmed", "cancelled") or (r.status == "pending" and r.expires_at > now)
+        for r in regs
+    ):
+        raise HTTPException(status_code=409, detail="Event has registrations")
+    # Only dead holds are left; they go first because of ondelete=RESTRICT.
+    for reg in regs:
         db.delete(reg)
     db.delete(ev)
     db.commit()

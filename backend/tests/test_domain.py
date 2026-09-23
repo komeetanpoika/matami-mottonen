@@ -34,7 +34,8 @@ def test_transitions() -> None:
     assert transition("pending", "cancelled") == "expired"
     assert transition("confirmed", "refunded") == "cancelled"
     assert transition("confirmed", "paid") is None
-    assert transition("expired", "paid") is None
+    # A payment that lands after the hold was swept still has to be honoured.
+    assert transition("expired", "paid") == "confirmed"
     assert transition("cancelled", "refunded") is None
     assert transition("pending", "refunded") is None
 

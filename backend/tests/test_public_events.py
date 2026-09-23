@@ -52,6 +52,11 @@ def test_detail_has_seats_left_and_hides_drafts(client: TestClient, db: Session)
     assert client.get("/api/events/nope").status_code == 404
 
 
+def test_detail_404_for_a_past_event(client: TestClient, db: Session) -> None:
+    past = make_event(db, title_en="Past", starts_at=datetime.now(UTC) - timedelta(minutes=1))
+    assert client.get(f"/api/events/{past.slug}").status_code == 404
+
+
 def test_sold_out_flag(client: TestClient, db: Session) -> None:
     ev = make_event(db, capacity=1)
     now = datetime.now(UTC)

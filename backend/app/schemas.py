@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
 class LoginIn(BaseModel):
@@ -67,6 +67,16 @@ class CheckoutIn(BaseModel):
     email: EmailStr
     quantity: int = Field(ge=1, le=10)
     lang: str = Field(default="en", pattern="^(fi|en|de|futhark)$")
+
+    @field_validator("name")
+    @classmethod
+    def _strip_name(cls, v: str) -> str:
+        # Strip inside validation so an all-whitespace name is a 422, not an
+        # empty name smuggled past min_length and stripped by the endpoint.
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("name must not be blank")
+        return stripped
 
 
 class CheckoutOut(BaseModel):

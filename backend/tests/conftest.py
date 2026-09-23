@@ -38,10 +38,12 @@ TABLES = "registrations, events, admin_users"
 
 @pytest.fixture(autouse=True)
 def _fresh_login_limiter() -> None:
-    # The login rate limiter is a module-level singleton and TestClient
-    # always uses the same client IP, so without a reset here, login() calls
-    # in one test module would count against the limit in another.
-    auth_module._limiter = SlidingWindowLimiter(settings.login_rate_limit, 300)
+    # The login rate limiters are module-level singletons and TestClient
+    # always uses the same client IP and the same owner account, so without a
+    # reset here, login() calls in one test module would count against the
+    # limits in another.
+    auth_module._ip_limiter = SlidingWindowLimiter(settings.login_rate_limit, 300)
+    auth_module._account_limiter = SlidingWindowLimiter(settings.login_rate_limit, 300)
 
 
 class FakeStripeGateway(StripeGateway):

@@ -30,7 +30,7 @@ def checkout(
             db,
             gateway,
             slug=slug,
-            name=body.name.strip(),
+            name=body.name,
             email=body.email,
             quantity=body.quantity,
             lang=body.lang,

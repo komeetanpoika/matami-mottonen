@@ -11,7 +11,10 @@ from app.security import sign_session
 from app.services.auth import authenticate
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-_limiter = SlidingWindowLimiter(settings.login_rate_limit, 300)
+# Two windows: the client IP is spoofable behind a misconfigured proxy (and a
+# botnet has plenty of them), so the account is limited independently.
+_ip_limiter = SlidingWindowLimiter(settings.login_rate_limit, 300)
+_account_limiter = SlidingWindowLimiter(settings.login_rate_limit, 300)
 
 
 @router.post("/login", status_code=204)
@@ -19,7 +22,10 @@ def login(
     body: LoginIn, request: Request, response: Response, db: Session = Depends(get_db)
 ) -> None:
     ip = request.client.host if request.client else "unknown"
-    if not _limiter.hit(ip):
+    # Both are hit on every attempt so neither window can be starved by the other.
+    ip_ok = _ip_limiter.hit(ip)
+    account_ok = _account_limiter.hit(body.email.strip().lower())
+    if not (ip_ok and account_ok):
         raise HTTPException(status_code=429, detail="Too many attempts")
     user = authenticate(db, body.email, body.password)
     if user is None:

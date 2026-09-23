@@ -49,7 +49,9 @@ def start_checkout(
     now: datetime | None = None,
 ) -> CheckoutResult:
     with db.begin():
-        ev = lock_published_by_slug(db, slug)
+        # The "not started yet" filter tolerates a pre-lock clock (start times
+        # are hours away); only the seat math below needs a post-lock `now`.
+        ev = lock_published_by_slug(db, slug, now or datetime.now(UTC))
         if ev is None:
             raise CheckoutError("not_found")
         # Resolve `now` only after the row lock is acquired: computing it earlier

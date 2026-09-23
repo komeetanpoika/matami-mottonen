@@ -24,3 +24,9 @@ def test_finnish_and_fallback() -> None:
     assert "Vahvistus" in subject_fi and "2 paikkaa" in body_fi
     assert confirmation("de", **KW) == confirmation("en", **KW)
     assert confirmation("futhark", **KW) == confirmation("en", **KW)
+
+
+def test_single_seat_is_singular() -> None:
+    kw = {**KW, "quantity": 1}
+    assert "1 seat\n" in confirmation("en", **kw)[1]
+    assert "1 paikka\n" in confirmation("fi", **kw)[1]

@@ -31,13 +31,21 @@ def holds_for(db: Session, event_id: int) -> list[Hold]:
     return holds_by_event(db, [event_id]).get(event_id, [])
 
 
-def get_published_by_slug(db: Session, slug: str) -> Event | None:
-    return db.scalar(select(Event).where(Event.slug == slug, Event.is_published.is_(True)))
-
-
-def lock_published_by_slug(db: Session, slug: str) -> Event | None:
+# A published event stops being publicly visible — and stops taking sign-ups —
+# once it has started; `now` is passed in so callers control the clock.
+def get_published_by_slug(db: Session, slug: str, now: datetime) -> Event | None:
     return db.scalar(
-        select(Event).where(Event.slug == slug, Event.is_published.is_(True)).with_for_update()
+        select(Event).where(
+            Event.slug == slug, Event.is_published.is_(True), Event.starts_at >= now
+        )
+    )
+
+
+def lock_published_by_slug(db: Session, slug: str, now: datetime) -> Event | None:
+    return db.scalar(
+        select(Event)
+        .where(Event.slug == slug, Event.is_published.is_(True), Event.starts_at >= now)
+        .with_for_update()
     )
 
 

@@ -62,9 +62,25 @@ def test_validation(client: TestClient, db: Session) -> None:
     assert (
         client.post(f"/api/events/{ev.slug}/checkout", json={**FORM, "name": ""}).status_code == 422
     )
+    assert (
+        client.post(f"/api/events/{ev.slug}/checkout", json={**FORM, "name": "   "}).status_code
+        == 422
+    )
     assert client.post("/api/events/none/checkout", json=FORM).status_code == 404
     draft = make_event(db, is_published=False)
     assert client.post(f"/api/events/{draft.slug}/checkout", json=FORM).status_code == 404
+
+
+def test_name_is_stored_stripped(client: TestClient, db: Session) -> None:
+    ev = make_event(db)
+    r = client.post(f"/api/events/{ev.slug}/checkout", json={**FORM, "name": "  Aino  "})
+    assert r.status_code == 200, r.text
+    assert db.scalar(select(Registration.name)) == "Aino"
+
+
+def test_checkout_404_for_a_past_event(client: TestClient, db: Session) -> None:
+    past = make_event(db, title_en="Past", starts_at=datetime.now(UTC) - timedelta(minutes=1))
+    assert client.post(f"/api/events/{past.slug}/checkout", json=FORM).status_code == 404
 
 
 def test_free_event_confirms_immediately_and_emails(
@@ -93,10 +109,14 @@ def test_stripe_failure_rolls_back_hold(
 def test_last_seat_race_only_one_wins(client: TestClient, db: Session) -> None:
     ev = make_event(db, capacity=1)
     results: list[int] = []
+    # Every thread is parked here until all four are ready, so the requests
+    # really do contend for the row lock instead of trickling in one by one.
+    barrier = threading.Barrier(4)
 
     def go() -> None:
         # One TestClient per thread: a single client is not safe to share across threads.
         with TestClient(client.app) as c:
+            barrier.wait()
             results.append(
                 c.post(f"/api/events/{ev.slug}/checkout", json={**FORM, "quantity": 1}).status_code
             )
