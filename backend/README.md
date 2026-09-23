@@ -6,6 +6,7 @@ pip install -e ".[dev]"
 cp ../.env.example .env        # edit APP_* values
 alembic upgrade head
 uvicorn app.main:app --reload  # http://localhost:8000/docs
+# --proxy-headers is only needed in Docker (behind the web/nginx container); skip it here
 python -m pytest -q            # needs Postgres at localhost:5433 (fish/fish); creates matami_test
 ```
 

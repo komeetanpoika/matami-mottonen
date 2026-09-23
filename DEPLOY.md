@@ -10,6 +10,9 @@ Requirements: a Linux host with Docker + Docker Compose v2, a domain pointing at
        reverse_proxy localhost:8080
    }
    ```
+   The reverse proxy in front must pass `X-Forwarded-For` (Caddy's `reverse_proxy`
+   does this by default) so login rate limiting sees real client IPs instead of
+   the `web` container's.
 4. Stripe: in the dashboard create a webhook endpoint `https://matami.example.fi/api/stripe/webhook` with events `checkout.session.completed`, `checkout.session.expired`, `charge.refunded`. Put its signing secret in `APP_STRIPE_WEBHOOK_SECRET` and `docker compose up -d api`.
    Also enable "Email customers about successful payments" in Stripe if you want Stripe's own receipt in addition to our confirmation email.
 5. Log in at `https://matami.example.fi/admin/login` with `APP_ADMIN_EMAIL` / `APP_ADMIN_PASSWORD` and create events. Changing the password later: run
