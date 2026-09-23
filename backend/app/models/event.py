@@ -22,7 +22,7 @@ class Event(Base):
     title_en: Mapped[str | None] = mapped_column(String(200))
     description_fi: Mapped[str | None] = mapped_column(Text)
     description_en: Mapped[str | None] = mapped_column(Text)
-    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     location: Mapped[str | None] = mapped_column(String(300))
     price_cents: Mapped[int] = mapped_column(Integer)
