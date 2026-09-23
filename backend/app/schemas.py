@@ -78,3 +78,14 @@ class RegistrationStatusOut(BaseModel):
     status: str
     event_slug: str
     quantity: int
+
+
+class AdminRegistrationOut(BaseModel):
+    id: str
+    name: str
+    email: str
+    quantity: int
+    status: str
+    amount_cents: int
+    created_at: datetime
+    confirmed_at: datetime | None
