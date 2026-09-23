@@ -22,14 +22,19 @@ def login(
     body: LoginIn, request: Request, response: Response, db: Session = Depends(get_db)
 ) -> None:
     ip = request.client.host if request.client else "unknown"
-    # Both are hit on every attempt so neither window can be starved by the other.
-    ip_ok = _ip_limiter.hit(ip)
-    account_ok = _account_limiter.hit(body.email.strip().lower())
-    if not (ip_ok and account_ok):
+    # The IP window is checked first and short-circuits the request: only
+    # attempts within the per-IP budget ever touch the account limiter, so a
+    # flood of made-up emails from one IP can't grow its key space unbounded.
+    if not _ip_limiter.hit(ip):
+        raise HTTPException(status_code=429, detail="Too many attempts")
+    account_key = body.email.strip().lower()
+    if not _account_limiter.hit(account_key):
         raise HTTPException(status_code=429, detail="Too many attempts")
     user = authenticate(db, body.email, body.password)
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    # A successful login shouldn't count toward the account's failure budget.
+    _account_limiter.clear(account_key)
     response.set_cookie(
         SESSION_COOKIE,
         sign_session(user.id),

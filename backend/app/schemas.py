@@ -8,7 +8,7 @@ class LoginIn(BaseModel):
     # ".local" TLD (IANA special-use, not a deliverability check), and
     # ".local" addresses are baked into conftest.py's APP_ADMIN_EMAIL and
     # this feature's test fixtures.
-    email: str
+    email: str = Field(min_length=3, max_length=320)
     password: str
 
 

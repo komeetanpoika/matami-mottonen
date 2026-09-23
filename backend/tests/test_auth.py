@@ -55,3 +55,28 @@ def test_account_limit_keys_on_the_normalised_email(client: TestClient) -> None:
         client.post("/api/auth/login", json={"email": " OWNER@Test.Local ", "password": "nope"})
     auth_module._ip_limiter = SlidingWindowLimiter(settings.login_rate_limit, 300)
     assert client.post("/api/auth/login", json=LOGIN).status_code == 429
+
+
+def test_login_email_over_max_length_is_422(client: TestClient) -> None:
+    long_email = ("a" * 310) + "@test.local"  # > 320 chars
+    r = client.post("/api/auth/login", json={"email": long_email, "password": "x"})
+    assert r.status_code == 422
+
+
+def test_successful_login_clears_the_account_window(client: TestClient) -> None:
+    # Three successful logins would already exceed the account window if
+    # success counted toward it; resetting the IP limiter between them
+    # isolates the account window as the thing under test.
+    for _ in range(3):
+        auth_module._ip_limiter = SlidingWindowLimiter(settings.login_rate_limit, 300)
+        assert client.post("/api/auth/login", json=LOGIN).status_code == 204
+
+    auth_module._ip_limiter = SlidingWindowLimiter(settings.login_rate_limit, 300)
+    for _ in range(5):
+        r = client.post("/api/auth/login", json={**LOGIN, "password": "nope"})
+        assert r.status_code == 401
+
+    # A fresh IP budget isolates the account window: the 6th failure alone
+    # trips it, proving only failures were ever counted.
+    auth_module._ip_limiter = SlidingWindowLimiter(settings.login_rate_limit, 300)
+    assert client.post("/api/auth/login", json={**LOGIN, "password": "nope"}).status_code == 429
