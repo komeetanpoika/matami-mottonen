@@ -7,8 +7,11 @@ import LandingPage from './pages/LandingPage'
 import EventsPage from './pages/EventsPage'
 import EventDetailPage from './pages/EventDetailPage'
 import ThanksPage from './pages/ThanksPage'
-
-const Todo = ({ name }: { name: string }) => <div style={{ padding: '2rem' }}>{name}</div>
+import AdminLayout from './pages/admin/AdminLayout'
+import AdminLoginPage from './pages/admin/AdminLoginPage'
+import AdminEventsPage from './pages/admin/AdminEventsPage'
+import AdminEventFormPage from './pages/admin/AdminEventFormPage'
+import AdminAttendeesPage from './pages/admin/AdminAttendeesPage'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -19,11 +22,13 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/thanks" element={<ThanksPage />} />
           <Route path="/events/:slug" element={<EventDetailPage />} />
-          <Route path="/admin/login" element={<Todo name="admin login" />} />
-          <Route path="/admin" element={<Todo name="admin" />} />
-          <Route path="/admin/events/new" element={<Todo name="new" />} />
-          <Route path="/admin/events/:id" element={<Todo name="edit" />} />
-          <Route path="/admin/events/:id/attendees" element={<Todo name="attendees" />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminEventsPage />} />
+            <Route path="events/new" element={<AdminEventFormPage />} />
+            <Route path="events/:id" element={<AdminEventFormPage />} />
+            <Route path="events/:id/attendees" element={<AdminAttendeesPage />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </LangProvider>
