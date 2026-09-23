@@ -91,6 +91,7 @@ __pycache__
 .pytest_cache
 .ruff_cache
 .DS_Store
+.superpowers
 ```
 
 Root `README.md`:
@@ -124,12 +125,22 @@ export default defineConfig({
 
 In `frontend/index.html` change `<title>Vite + React + TS</title>` to `<title>Matami Möttönen</title>`.
 
-- [ ] **Step 4: Verify build and lint**
+- [ ] **Step 4: Fix the two pre-existing type errors**
+
+The baseline `tsc -b` fails before this task. In `frontend/src/App.tsx` replace the `services` helper's parameter type with the exported `Strings` type:
+```ts
+import { Lang, Strings, langLabels, translations } from './translations'
+
+const services = (t: Strings) => [
+```
+In `frontend/src/translations.ts` change the cast in `runeStrings` to `) as unknown as Strings`.
+
+- [ ] **Step 5: Verify build and lint**
 
 Run: `cd frontend && npm run lint && npm run build`
-Expected: no lint errors; `dist/` produced.
+Expected: no lint errors, no type errors; `dist/` produced.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add -A && git commit -m "chore: move Vite app into frontend/ and add monorepo root
