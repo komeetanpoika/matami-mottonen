@@ -32,6 +32,7 @@ export default function EventDetailPage() {
 
   const { title, description } = pickLocalized(event, lang)
   const max = Math.min(10, event.seats_left)
+  const seatsLabel = event.seats_left === 1 ? t.seatLeftOne : t.seatsLeft.replace('{n}', String(event.seats_left))
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -56,7 +57,7 @@ export default function EventDetailPage() {
       <p style={{ color: colors.textMuted }}>{event.location}</p>
       <p style={{ color: colors.textSoft, whiteSpace: 'pre-line', fontSize: '1.1rem' }}>{description}</p>
       <p style={{ color: colors.mossLight, letterSpacing: '0.1em' }}>
-        {formatPrice(event.price_cents, lang)} {event.price_cents > 0 && t.perSeat} · {event.sold_out ? t.soldOut : t.seatsLeft.replace('{n}', String(event.seats_left))}
+        {formatPrice(event.price_cents, lang)} {event.price_cents > 0 && t.perSeat} · {event.sold_out ? t.soldOut : seatsLabel}
       </p>
       {cancelled && <p style={{ color: colors.textMuted, fontStyle: 'italic' }}>{t.cancelledNote}</p>}
       {!event.sold_out && (

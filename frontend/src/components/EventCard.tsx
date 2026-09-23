@@ -7,7 +7,8 @@ import { card, colors } from '../theme'
 export default function EventCard({ event }: { event: EventOut }) {
   const { lang, t } = useLang()
   const { title } = pickLocalized(event, lang)
-  const seats = event.sold_out ? t.soldOut : t.seatsLeft.replace('{n}', String(event.seats_left))
+  const remaining = event.seats_left === 1 ? t.seatLeftOne : t.seatsLeft.replace('{n}', String(event.seats_left))
+  const seats = event.sold_out ? t.soldOut : remaining
   return (
     <Link to={`/events/${event.slug}`} style={{ ...card, display: 'block', textDecoration: 'none', opacity: event.sold_out ? 0.6 : 1 }}>
       <div style={{ color: colors.mossLight, fontSize: '0.85rem', letterSpacing: '0.15em' }}>{formatEventDate(event.starts_at, lang)}</div>

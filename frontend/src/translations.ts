@@ -27,6 +27,7 @@ export interface Strings {
   eventsHeading: string
   eventsEmpty: string
   seatsLeft: string
+  seatLeftOne: string
   soldOut: string
   free: string
   perSeat: string
@@ -108,6 +109,7 @@ const en: Strings = {
   eventsHeading: 'Events',
   eventsEmpty: 'Nothing on the calendar right now. The moss is resting.',
   seatsLeft: '{n} seats left',
+  seatLeftOne: '1 seat left',
   soldOut: 'Sold out',
   free: 'Free',
   perSeat: 'per seat',
@@ -189,6 +191,7 @@ const fi: Strings = {
   eventsHeading: 'Tapahtumat',
   eventsEmpty: 'Kalenteri on tyhjä juuri nyt. Sammal lepää.',
   seatsLeft: '{n} paikkaa jäljellä',
+  seatLeftOne: '1 paikka jäljellä',
   soldOut: 'Loppuunmyyty',
   free: 'Ilmainen',
   perSeat: '/ paikka',
@@ -270,6 +273,7 @@ const de: Strings = {
   eventsHeading: 'Veranstaltungen',
   eventsEmpty: 'Gerade ist nichts im Kalender. Das Moos ruht.',
   seatsLeft: '{n} Plätze frei',
+  seatLeftOne: '1 Platz frei',
   soldOut: 'Ausverkauft',
   free: 'Kostenlos',
   perSeat: 'pro Platz',
