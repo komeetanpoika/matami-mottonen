@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
 
-from app.api import admin_events, auth, checkout, events
+from app.api import admin_events, auth, checkout, events, registrations, stripe_webhook
 from app.db import SessionLocal
 from app.services.auth import ensure_owner
 
@@ -26,6 +26,8 @@ def create_app() -> FastAPI:
     api.include_router(auth.router)
     api.include_router(events.router)
     api.include_router(checkout.router)
+    api.include_router(registrations.router)
+    api.include_router(stripe_webhook.router)
     api.include_router(admin_events.router)
     app.include_router(api)
     return app

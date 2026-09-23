@@ -72,3 +72,9 @@ class CheckoutIn(BaseModel):
 class CheckoutOut(BaseModel):
     registration_id: str
     checkout_url: str | None
+
+
+class RegistrationStatusOut(BaseModel):
+    status: str
+    event_slug: str
+    quantity: int
