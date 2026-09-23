@@ -1,16 +1,6 @@
-import pytest
 from fastapi.testclient import TestClient
 
-from app.api import auth as auth_module
-from app.api.rate_limit import SlidingWindowLimiter
-
 LOGIN = {"email": "owner@test.local", "password": "owner-pass"}
-
-
-@pytest.fixture(autouse=True)
-def _fresh_limiter() -> None:
-    # The limiter is module-level and TestClient's IP is the same for every test.
-    auth_module._limiter = SlidingWindowLimiter(5, 300)
 
 
 def test_me_requires_login(client: TestClient) -> None:

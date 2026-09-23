@@ -1,3 +1,5 @@
+import csv
+import io
 from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
@@ -68,3 +70,26 @@ def test_csv(client: TestClient, db: Session) -> None:
     assert lines[0] == "name,email,quantity,status,amount_eur,created_at"
     assert lines[1].startswith("Bo,b@x.fi,1,expired,20.00,")
     assert lines[2].startswith("Aino,a@x.fi,2,confirmed,40.00,")
+
+
+def test_csv_neutralises_formula_injection(client: TestClient, db: Session) -> None:
+    ev = make_event(db)
+    now = datetime.now(UTC)
+    db.add(
+        Registration(
+            event_id=ev.id,
+            name='=HYPERLINK("http://evil")',
+            email="e@x.fi",
+            quantity=1,
+            status="confirmed",
+            amount_cents=1000,
+            expires_at=now,
+            confirmed_at=now,
+            created_at=now,
+        )
+    )
+    db.commit()
+    login(client)
+    r = client.get(f"/api/admin/events/{ev.id}/registrations.csv")
+    rows = list(csv.reader(io.StringIO(r.text)))
+    assert rows[1][0] == '\'=HYPERLINK("http://evil")'

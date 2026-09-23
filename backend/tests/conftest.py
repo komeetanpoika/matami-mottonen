@@ -22,6 +22,8 @@ from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import create_engine, text  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
+from app.api import auth as auth_module  # noqa: E402
+from app.api.rate_limit import SlidingWindowLimiter  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.services.mailer import Mailer, get_mailer  # noqa: E402
 from app.services.stripe_gateway import (  # noqa: E402
@@ -32,6 +34,14 @@ from app.services.stripe_gateway import (  # noqa: E402
 )
 
 TABLES = "registrations, events, admin_users"
+
+
+@pytest.fixture(autouse=True)
+def _fresh_login_limiter() -> None:
+    # The login rate limiter is a module-level singleton and TestClient
+    # always uses the same client IP, so without a reset here, login() calls
+    # in one test module would count against the limit in another.
+    auth_module._limiter = SlidingWindowLimiter(settings.login_rate_limit, 300)
 
 
 class FakeStripeGateway(StripeGateway):

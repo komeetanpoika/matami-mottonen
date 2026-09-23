@@ -13,6 +13,20 @@ from app.schemas import AdminRegistrationOut
 
 router = APIRouter(prefix="/admin/events", tags=["admin"], dependencies=[Depends(require_admin)])
 
+_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe(value: str) -> str:
+    """Prefix a value with `'` if it could be read as a spreadsheet formula.
+
+    `name`/`email` come from the anonymous public checkout form, so an
+    admin opening the export in Excel/Sheets must not have attacker-supplied
+    strings like `=HYPERLINK(...)` execute as a formula.
+    """
+    if value.startswith(_FORMULA_PREFIXES):
+        return f"'{value}"
+    return value
+
 
 def _rows(db: Session, event_id: int) -> list[Registration]:
     if db.get(Event, event_id) is None:
@@ -51,8 +65,8 @@ def registrations_csv(event_id: int, db: Session = Depends(get_db)) -> Response:
     for r in _rows(db, event_id):
         w.writerow(
             [
-                r.name,
-                r.email,
+                _csv_safe(r.name),
+                _csv_safe(r.email),
                 r.quantity,
                 r.status,
                 f"{r.amount_cents / 100:.2f}",
