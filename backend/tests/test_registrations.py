@@ -48,3 +48,13 @@ def test_cancel_pending_frees_seats_and_expires_stripe(
     assert reg.status == "expired"
     assert client.get(f"/api/events/{slug}").json()["seats_left"] == 2
     assert client.post(f"/api/registrations/{reg.id}/cancel").status_code == 409
+
+
+def test_cancel_stays_pending_when_stripe_expire_fails(
+    client: TestClient, db: Session, stripe_fake: FakeStripeGateway
+) -> None:
+    reg = _pending(db)
+    stripe_fake.fail_expire = True
+    assert client.post(f"/api/registrations/{reg.id}/cancel").status_code == 409
+    db.refresh(reg)
+    assert reg.status == "pending"

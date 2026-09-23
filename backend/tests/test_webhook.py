@@ -1,4 +1,5 @@
 import json
+import threading
 from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
@@ -122,11 +123,39 @@ def test_refund_cancels(client: TestClient, db: Session) -> None:
     ev = {
         "id": "evt_4",
         "type": "charge.refunded",
-        "data": {"object": {"id": "ch_1", "payment_intent": "pi_1"}},
+        "data": {
+            "object": {
+                "id": "ch_1",
+                "payment_intent": "pi_1",
+                "refunded": True,
+                "amount": 4000,
+                "amount_refunded": 4000,
+            }
+        },
     }
     assert _post(client, ev).status_code == 200
     db.refresh(reg)
     assert reg.status == "cancelled"
+
+
+def test_partial_refund_is_ignored(client: TestClient, db: Session) -> None:
+    reg = _reg(db, status="confirmed", stripe_payment_intent_id="pi_1")
+    ev = {
+        "id": "evt_4b",
+        "type": "charge.refunded",
+        "data": {
+            "object": {
+                "id": "ch_1",
+                "payment_intent": "pi_1",
+                "refunded": False,
+                "amount": 4000,
+                "amount_refunded": 500,
+            }
+        },
+    }
+    assert _post(client, ev).status_code == 200
+    db.refresh(reg)
+    assert reg.status == "confirmed"
 
 
 def test_unknown_registration_and_unknown_type_are_acknowledged(
@@ -162,4 +191,31 @@ def test_email_retries_then_succeeds(
     mailer_fake.fail_times = 2
     reg = _reg(db)
     _post(client, _completed(reg))
+    assert len(mailer_fake.sent) == 1
+
+
+def test_concurrent_completed_confirms_once(
+    client: TestClient, db: Session, mailer_fake: RecordingMailer
+) -> None:
+    reg = _reg(db)
+    payload = json.dumps(_completed(reg)).encode()
+    headers = {"Stripe-Signature": sign(payload, SECRET), "Content-Type": "application/json"}
+    barrier = threading.Barrier(2)
+    results: list[int] = []
+
+    def _worker() -> None:
+        barrier.wait()
+        with TestClient(client.app) as c:
+            r = c.post("/api/stripe/webhook", content=payload, headers=headers)
+            results.append(r.status_code)
+
+    threads = [threading.Thread(target=_worker) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert results == [200, 200]
+    db.refresh(reg)
+    assert reg.status == "confirmed"
     assert len(mailer_fake.sent) == 1

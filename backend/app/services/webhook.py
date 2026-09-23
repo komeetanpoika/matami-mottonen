@@ -13,15 +13,26 @@ from app.services.stripe_gateway import StripeError, StripeGateway
 log = logging.getLogger(__name__)
 
 
-def _find_by_session(db: Session, obj: dict[str, Any]) -> Registration | None:
-    reg = repo.by_session_id(db, obj.get("id", "")) if obj.get("id") else None
+def _find_by_session(
+    db: Session, obj: dict[str, Any], *, for_update: bool = False
+) -> Registration | None:
+    session_id = obj.get("id", "")
+    reg = repo.by_session_id(db, session_id, for_update=for_update) if session_id else None
     if reg is not None:
         return reg
     raw = (obj.get("metadata") or {}).get("registration_id") or obj.get("client_reference_id")
     try:
-        return repo.get(db, uuid.UUID(str(raw))) if raw else None
+        return repo.get(db, uuid.UUID(str(raw)), for_update=for_update) if raw else None
     except ValueError:
         return None
+
+
+def _fully_refunded(obj: dict[str, Any]) -> bool:
+    if obj.get("refunded") is True:
+        return True
+    amount_refunded = obj.get("amount_refunded")
+    amount = obj.get("amount")
+    return amount_refunded is not None and amount is not None and amount_refunded == amount
 
 
 def handle_event(db: Session, event: dict[str, Any]) -> Registration | None:
@@ -29,12 +40,17 @@ def handle_event(db: Session, event: dict[str, Any]) -> Registration | None:
     kind = event.get("type")
     obj: dict[str, Any] = event.get("data", {}).get("object", {}) or {}
     if kind == "checkout.session.completed":
-        reg = _find_by_session(db, obj)
+        reg = _find_by_session(db, obj, for_update=True)
         if reg is None:
             log.warning("checkout.session.completed for unknown session %s", obj.get("id"))
             return None
         nxt = transition(reg.status, "paid")
         if nxt is None:
+            log.error(
+                "checkout.session.completed for registration %s already in state %s",
+                reg.id,
+                reg.status,
+            )
             return None
         reg.status = nxt
         reg.confirmed_at = datetime.now(UTC)
@@ -45,32 +61,51 @@ def handle_event(db: Session, event: dict[str, Any]) -> Registration | None:
         db.refresh(reg)
         return reg
     if kind == "checkout.session.expired":
-        reg = _find_by_session(db, obj)
-        nxt = transition(reg.status, "expired") if reg else None
-        if reg is not None and nxt is not None:
+        reg = _find_by_session(db, obj, for_update=True)
+        if reg is None:
+            log.warning("checkout.session.expired for unknown session %s", obj.get("id"))
+            return None
+        nxt = transition(reg.status, "expired")
+        if nxt is not None:
             reg.status = nxt
             db.commit()
         return None
     if kind == "charge.refunded":
         pi = obj.get("payment_intent")
-        reg = repo.by_payment_intent(db, pi) if pi else None
-        nxt = transition(reg.status, "refunded") if reg else None
-        if reg is not None and nxt is not None:
+        reg = repo.by_payment_intent(db, pi, for_update=True) if pi else None
+        if reg is None:
+            log.warning("charge.refunded for unknown/absent payment_intent %s", pi)
+            return None
+        if not _fully_refunded(obj):
+            log.info(
+                "Partial refund for registration %s (payment_intent %s); leaving status %s",
+                reg.id,
+                pi,
+                reg.status,
+            )
+            return None
+        nxt = transition(reg.status, "refunded")
+        if nxt is not None:
             reg.status = nxt
             db.commit()
         return None
+    log.warning("Unhandled Stripe event type %s", kind)
     return None
 
 
 def cancel_pending(db: Session, gateway: StripeGateway, reg: Registration) -> bool:
-    nxt = transition(reg.status, "cancelled")
+    locked = repo.get(db, reg.id, for_update=True)
+    if locked is None:
+        return False
+    nxt = transition(locked.status, "cancelled")
     if nxt is None:
         return False
-    if reg.stripe_session_id:
+    if locked.stripe_session_id:
         try:
-            gateway.expire_session(reg.stripe_session_id)
+            gateway.expire_session(locked.stripe_session_id)
         except StripeError as e:
-            log.warning("Could not expire Stripe session %s: %s", reg.stripe_session_id, e)
-    reg.status = nxt
+            log.warning("Could not expire Stripe session %s: %s", locked.stripe_session_id, e)
+            return False
+    locked.status = nxt
     db.commit()
     return True

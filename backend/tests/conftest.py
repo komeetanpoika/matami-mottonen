@@ -40,6 +40,7 @@ class FakeStripeGateway(StripeGateway):
         self.calls: list[dict[str, object]] = []
         self.expired: list[str] = []
         self.fail_next = False
+        self.fail_expire = False
         self._lock = threading.Lock()
 
     def create_checkout_session(self, **kw: object) -> CheckoutSession:
@@ -52,6 +53,8 @@ class FakeStripeGateway(StripeGateway):
             return CheckoutSession(id=f"cs_test_{n}", url=f"https://stripe.test/{n}")
 
     def expire_session(self, session_id: str) -> None:
+        if self.fail_expire:
+            raise StripeError("simulated expire failure")
         self.expired.append(session_id)
 
 
