@@ -1,7 +1,9 @@
-import { useState } from 'react'
-import './index.css'
-import { Lang, Strings, langLabels, translations } from './translations'
-import CornerFrames from './CornerFrames'
+import { Link } from 'react-router-dom'
+import '../index.css'
+import { Strings } from '../translations'
+import CornerFrames from '../CornerFrames'
+import LangSwitcher from '../components/LangSwitcher'
+import { useLang } from '../lang'
 
 const services = (t: Strings) => [
   { icon: '🪬', title: t.service1Title, desc: t.service1Desc },
@@ -53,22 +55,19 @@ const scatter: { glyph: string; x: number; y: number; rot: number; size: number;
   { glyph: '🪨', x: 82, y: 94, rot: 5,   size: 2.2, op: 0.05 },
 ]
 
-const langs: Lang[] = ['en', 'fi', 'de', 'futhark']
-
-export default function App() {
-  const [lang, setLang] = useState<Lang>('en')
-  const t = translations[lang]
+export default function LandingPage() {
+  const { lang, t } = useLang()
   const svcs = services(t)
 
   return (
     <div style={{ background: '#1e2318', minHeight: '100vh' }}>
       <CornerFrames />
 
-      {/* Language switcher — fixed top-right */}
+      {/* Events nav — fixed top-left */}
       <div style={{
         position: 'fixed',
         top: '1rem',
-        right: '1rem',
+        left: '1rem',
         zIndex: 100,
         display: 'flex',
         gap: '0.25rem',
@@ -78,29 +77,27 @@ export default function App() {
         padding: '0.3rem 0.4rem',
         borderRadius: '2px',
       }}>
-        {langs.map(l => (
-          <button
-            key={l}
-            onClick={() => setLang(l)}
-            style={{
-              background: lang === l ? '#3d5a3e' : 'transparent',
-              color: lang === l ? '#e8e0d0' : '#5c7a50',
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: "'Crimson Text', Georgia, serif",
-              fontSize: '0.8rem',
-              letterSpacing: '0.08em',
-              padding: '0.2rem 0.5rem',
-              transition: 'all 0.15s',
-              borderRadius: '1px',
-            }}
-            onMouseEnter={e => { if (lang !== l) (e.target as HTMLElement).style.color = '#a0c090' }}
-            onMouseLeave={e => { if (lang !== l) (e.target as HTMLElement).style.color = '#5c7a50' }}
-          >
-            {langLabels[l]}
-          </button>
-        ))}
+        <Link
+          to="/events"
+          style={{
+            background: 'transparent',
+            color: '#5c7a50',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: "'Crimson Text', Georgia, serif",
+            fontSize: '0.8rem',
+            letterSpacing: '0.08em',
+            padding: '0.2rem 0.5rem',
+            transition: 'all 0.15s',
+            borderRadius: '1px',
+            textDecoration: 'none',
+          }}
+        >
+          {t.navEvents}
+        </Link>
       </div>
+
+      <LangSwitcher />
 
       {/* Hero */}
       <section
