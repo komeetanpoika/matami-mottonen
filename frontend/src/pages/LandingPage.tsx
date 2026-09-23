@@ -3,6 +3,7 @@ import '../index.css'
 import { Strings } from '../translations'
 import CornerFrames from '../CornerFrames'
 import LangSwitcher from '../components/LangSwitcher'
+import UpcomingSection from '../components/UpcomingSection'
 import { useLang } from '../lang'
 
 const services = (t: Strings) => [
@@ -214,6 +215,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <UpcomingSection />
 
       {/* Contact */}
       <section id="contact" style={{ padding: '6rem 1.5rem', textAlign: 'center', background: 'radial-gradient(ellipse at 50% 100%, #3a1e38 0%, #271428 40%, #1e2318 70%)' }}>
