@@ -11,13 +11,13 @@ interface Form {
 }
 const empty: Form = { title_fi: '', title_en: '', description_fi: '', description_en: '', starts_at: '', ends_at: '', location: '', price_eur: '0', capacity: '10', is_published: false }
 
-function toBody(f: Form): EventIn {
+function toBody(f: Form, price_cents: number, capacity: number): EventIn {
   return {
     title_fi: f.title_fi.trim() || null, title_en: f.title_en.trim() || null,
     description_fi: f.description_fi.trim() || null, description_en: f.description_en.trim() || null,
     starts_at: localInputToIso(f.starts_at) ?? '', ends_at: localInputToIso(f.ends_at),
     location: f.location.trim() || null,
-    price_cents: Math.round(Number(f.price_eur.replace(',', '.')) * 100), capacity: Number(f.capacity), is_published: f.is_published,
+    price_cents, capacity, is_published: f.is_published,
   }
 }
 
@@ -47,13 +47,20 @@ export default function AdminEventFormPage() {
   async function submit(e: FormEvent) {
     e.preventDefault()
     setErr(null)
-    const body = toBody(f)
-    if (!body.title_fi && !body.title_en) { setErr(t.adminNeedTitle); return }
+    if (!f.title_fi.trim() && !f.title_en.trim()) { setErr(t.adminNeedTitle); return }
+    const price = Number(f.price_eur.trim().replace(',', '.'))
+    if (!Number.isFinite(price) || price < 0) { setErr(t.adminBadPrice); return }
+    const capacity = Number(f.capacity)
+    if (!Number.isInteger(capacity) || capacity < 1) { setErr(t.adminBadCapacity); return }
+    const body = toBody(f, Math.round(price * 100), capacity)
     try {
       if (eventId === null) await api.admin.createEvent(body)
       else await api.admin.updateEvent(eventId, body)
       nav('/admin')
-    } catch (ex) { setErr(ex instanceof ApiError ? JSON.stringify(ex.detail) : t.errGeneric) }
+    } catch (ex) {
+      if (ex instanceof ApiError) console.error(ex)
+      setErr(t.errGeneric)
+    }
   }
 
   async function remove() {

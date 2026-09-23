@@ -77,6 +77,8 @@ export interface Strings {
   adminCreated: string
   adminEdit: string
   adminNeedTitle: string
+  adminBadPrice: string
+  adminBadCapacity: string
 }
 
 const en: Strings = {
@@ -156,6 +158,8 @@ const en: Strings = {
   adminCreated: 'Created',
   adminEdit: 'Edit',
   adminNeedTitle: 'Give the event a title in at least one language.',
+  adminBadPrice: 'Enter a price like 25 or 25,50.',
+  adminBadCapacity: 'Capacity must be a whole number of at least 1.',
 }
 
 const fi: Strings = {
@@ -235,6 +239,8 @@ const fi: Strings = {
   adminCreated: 'Luotu',
   adminEdit: 'Muokkaa',
   adminNeedTitle: 'Anna tapahtumalle otsikko ainakin yhdellä kielellä.',
+  adminBadPrice: 'Anna hinta muodossa 25 tai 25,50.',
+  adminBadCapacity: 'Paikkamäärän on oltava kokonaisluku, vähintään 1.',
 }
 
 const de: Strings = {
@@ -314,6 +320,8 @@ const de: Strings = {
   adminCreated: 'Erstellt',
   adminEdit: 'Bearbeiten',
   adminNeedTitle: 'Gib der Veranstaltung mindestens in einer Sprache einen Titel.',
+  adminBadPrice: 'Gib einen Preis wie 25 oder 25,50 ein.',
+  adminBadCapacity: 'Die Kapazität muss eine ganze Zahl von mindestens 1 sein.',
 }
 
 // Elder Futhark transliteration
