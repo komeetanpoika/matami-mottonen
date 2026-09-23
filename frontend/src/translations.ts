@@ -99,7 +99,7 @@ function toRunes(text: string): string {
 function runeStrings(base: Strings): Strings {
   return Object.fromEntries(
     Object.entries(base).map(([k, v]) => [k, toRunes(v)])
-  ) as Strings
+  ) as unknown as Strings
 }
 
 export const translations: Record<Lang, Strings> = {

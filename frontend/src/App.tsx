@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import './index.css'
-import { Lang, langLabels, translations } from './translations'
+import { Lang, Strings, langLabels, translations } from './translations'
 import CornerFrames from './CornerFrames'
 
-const services = (t: ReturnType<typeof translations[Lang extends string ? Lang : never]>) => [
+const services = (t: Strings) => [
   { icon: '🪬', title: t.service1Title, desc: t.service1Desc },
   { icon: '🃏', title: t.service2Title, desc: t.service2Desc },
   { icon: '🖼',  title: t.service3Title, desc: t.service3Desc },
