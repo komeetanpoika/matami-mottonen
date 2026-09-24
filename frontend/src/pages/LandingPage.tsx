@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import '../index.css'
 import { Strings } from '../translations'
 import CornerFrames from '../CornerFrames'
+import BookNav from '../components/BookNav'
 import LangSwitcher from '../components/LangSwitcher'
 import UpcomingSection from '../components/UpcomingSection'
 import { useLang } from '../lang'
@@ -64,39 +65,7 @@ export default function LandingPage() {
     <div style={{ background: '#1e2318', minHeight: '100vh' }}>
       <CornerFrames />
 
-      {/* Events nav — fixed top-left */}
-      <div style={{
-        position: 'fixed',
-        top: '1rem',
-        left: '1rem',
-        zIndex: 100,
-        display: 'flex',
-        gap: '0.25rem',
-        background: 'rgba(20,24,16,0.75)',
-        backdropFilter: 'blur(6px)',
-        border: '1px solid #2a3d2b',
-        padding: '0.3rem 0.4rem',
-        borderRadius: '2px',
-      }}>
-        <Link
-          to="/events"
-          style={{
-            background: 'transparent',
-            color: '#5c7a50',
-            border: 'none',
-            cursor: 'pointer',
-            fontFamily: "'Crimson Text', Georgia, serif",
-            fontSize: '0.8rem',
-            letterSpacing: '0.08em',
-            padding: '0.2rem 0.5rem',
-            transition: 'all 0.15s',
-            borderRadius: '1px',
-            textDecoration: 'none',
-          }}
-        >
-          {t.navEvents}
-        </Link>
-      </div>
+      <BookNav />
 
       <LangSwitcher />
 
@@ -152,32 +121,42 @@ export default function LandingPage() {
         <p style={{ position: 'relative', maxWidth: '28rem', fontSize: '1.2rem', color: '#b8b090', fontStyle: 'italic', marginBottom: '2.5rem' }}>
           {t.heroSub}
         </p>
-        <a
-          href="#services"
+        <Link
+          to="/events"
           style={{
             position: 'relative',
             display: 'inline-block',
-            border: '1px solid #3d5a3e',
-            color: '#7a9e6a',
-            padding: '0.65rem 2rem',
-            letterSpacing: '0.12em',
-            fontSize: '0.9rem',
+            background: '#3d5a3e',
+            color: '#e8e0d0',
+            padding: '0.95rem 2.75rem',
+            letterSpacing: '0.14em',
+            fontSize: '1.05rem',
             textDecoration: 'none',
             textTransform: lang === 'futhark' ? 'none' : 'uppercase',
-            transition: 'all 0.2s',
+            boxShadow: '0 0 0 1px #5c7a50, 0 8px 40px rgba(122, 158, 106, 0.25)',
+            transition: 'background 0.2s, transform 0.2s',
           }}
-          onMouseEnter={e => {
-            (e.target as HTMLElement).style.background = '#3d5a3e'
-            ;(e.target as HTMLElement).style.color = '#e8e0d0'
-          }}
-          onMouseLeave={e => {
-            (e.target as HTMLElement).style.background = 'transparent'
-            ;(e.target as HTMLElement).style.color = '#7a9e6a'
-          }}
+          onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = '#4d6e4e')}
+          onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = '#3d5a3e')}
         >
           {t.enterBtn}
+        </Link>
+        <a
+          href="#about"
+          style={{
+            position: 'relative',
+            marginTop: '1.4rem',
+            color: '#5c7a50',
+            fontSize: '0.95rem',
+            fontStyle: 'italic',
+            textDecoration: 'none',
+          }}
+        >
+          {t.bookSecondary}
         </a>
       </section>
+
+      <UpcomingSection />
 
       {/* About */}
       <section id="about" style={{ maxWidth: '640px', margin: '0 auto', padding: '6rem 1.5rem', textAlign: 'center' }}>
@@ -215,8 +194,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      <UpcomingSection />
 
       {/* Contact */}
       <section id="contact" style={{ padding: '6rem 1.5rem', textAlign: 'center', background: 'radial-gradient(ellipse at 50% 100%, #3a1e38 0%, #271428 40%, #1e2318 70%)' }}>

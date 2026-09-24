@@ -4,6 +4,7 @@ export interface Strings {
   tagline: string
   heroSub: string
   enterBtn: string
+  bookSecondary: string
   aboutLabel: string
   aboutHeading: string
   aboutBody: string
@@ -85,7 +86,8 @@ export interface Strings {
 const en: Strings = {
   tagline: 'sound · tarot · art',
   heroSub: 'Witch. Healer. Chaos agent with good intentions and a small collection of singing bowls.',
-  enterBtn: 'Enter ↓',
+  enterBtn: 'Book a class',
+  bookSecondary: 'or read about Matami ↓',
   aboutLabel: '✦ about ✦',
   aboutHeading: 'She lives in the moss',
   aboutBody: 'Matami works with sound, intuition, and whatever the cards decide to say that day. Sessions are held in-person, outdoors when possible, and always with the understanding that healing is messy and non-linear. No spiritual bypassing. No false promises. Just vibration, presence, and the occasional unsolicited truth.',
@@ -101,12 +103,12 @@ const en: Strings = {
   contactHeading: 'Get in touch',
   contactBody: 'For bookings, questions, or to enquire about art — reach out below. Response times are feral but genuine.',
   footer: 'All rites reserved',
-  navEvents: 'Events',
+  navEvents: 'Book a class',
   navHome: 'Home',
   upcomingLabel: '✦ upcoming ✦',
-  upcomingHeading: 'Gatherings',
-  seeAllEvents: 'All events →',
-  eventsHeading: 'Events',
+  upcomingHeading: 'Book a class',
+  seeAllEvents: 'See all classes',
+  eventsHeading: 'Classes',
   eventsEmpty: 'Nothing on the calendar right now. The moss is resting.',
   seatsLeft: '{n} seats left',
   seatLeftOne: '1 seat left',
@@ -167,7 +169,8 @@ const en: Strings = {
 const fi: Strings = {
   tagline: 'ääni · tarot · taide',
   heroSub: 'Noita. Parantaja. Kaaoksen asiamies hyvällä sydämellä ja pienellä kokoelmalla laulusuppiloita.',
-  enterBtn: 'Sisään ↓',
+  enterBtn: 'Varaa paikka',
+  bookSecondary: 'tai lue Matamista ↓',
   aboutLabel: '✦ tietoa ✦',
   aboutHeading: 'Hän asuu sammalessa',
   aboutBody: 'Matami työskentelee äänen, intuition ja sen kanssa mitä kortit sinä päivänä päättävät sanoa. Istunnot pidetään kasvotusten, ulkona aina kun mahdollista, ja aina ymmärryksellä että paraneminen on sotkuista eikä etene suoraan. Ei henkistä oikomista. Ei tyhjiä lupauksia. Vain värinää, läsnäoloa ja satunnainen pyytämätön totuus.',
@@ -183,12 +186,12 @@ const fi: Strings = {
   contactHeading: 'Ota yhteyttä',
   contactBody: 'Varauksiin, kysymyksiin tai taidekysymyksiin — ota yhteyttä alla. Vastausajat ovat villitä mutta aitoja.',
   footer: 'Kaikki oikeudet pidätetään',
-  navEvents: 'Tapahtumat',
+  navEvents: 'Varaa paikka',
   navHome: 'Etusivu',
   upcomingLabel: '✦ tulossa ✦',
-  upcomingHeading: 'Kokoontumiset',
-  seeAllEvents: 'Kaikki tapahtumat →',
-  eventsHeading: 'Tapahtumat',
+  upcomingHeading: 'Varaa paikka',
+  seeAllEvents: 'Katso kaikki tunnit',
+  eventsHeading: 'Tunnit',
   eventsEmpty: 'Kalenteri on tyhjä juuri nyt. Sammal lepää.',
   seatsLeft: '{n} paikkaa jäljellä',
   seatLeftOne: '1 paikka jäljellä',
@@ -249,7 +252,8 @@ const fi: Strings = {
 const de: Strings = {
   tagline: 'klang · tarot · kunst',
   heroSub: 'Hexe. Heilerin. Chaosagentin mit guten Absichten und einer kleinen Sammlung Klangschalen.',
-  enterBtn: 'Eintreten ↓',
+  enterBtn: 'Platz buchen',
+  bookSecondary: 'oder lies über Matami ↓',
   aboutLabel: '✦ über ✦',
   aboutHeading: 'Sie lebt im Moos',
   aboutBody: 'Matami arbeitet mit Klang, Intuition und dem, was die Karten an jedem Tag zu sagen beschließen. Sitzungen finden persönlich statt, wenn möglich draußen, immer mit dem Verständnis, dass Heilung unordentlich und nichtlinear ist. Kein spirituelles Umgehen. Keine falschen Versprechen. Nur Schwingung, Präsenz und die gelegentliche ungebetene Wahrheit.',
@@ -265,12 +269,12 @@ const de: Strings = {
   contactHeading: 'Kontakt aufnehmen',
   contactBody: 'Für Buchungen, Fragen oder Kunstanfragen — schreib unten. Antwortzeiten sind wild aber aufrichtig.',
   footer: 'Alle Riten vorbehalten',
-  navEvents: 'Veranstaltungen',
+  navEvents: 'Platz buchen',
   navHome: 'Startseite',
   upcomingLabel: '✦ demnächst ✦',
-  upcomingHeading: 'Zusammenkünfte',
-  seeAllEvents: 'Alle Veranstaltungen →',
-  eventsHeading: 'Veranstaltungen',
+  upcomingHeading: 'Platz buchen',
+  seeAllEvents: 'Alle Termine ansehen',
+  eventsHeading: 'Kurse',
   eventsEmpty: 'Gerade ist nichts im Kalender. Das Moos ruht.',
   seatsLeft: '{n} Plätze frei',
   seatLeftOne: '1 Platz frei',
